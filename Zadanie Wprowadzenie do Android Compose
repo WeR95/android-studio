@@ -172,10 +172,14 @@ fun DogListApp() {
                             favoriteCount = dogs.count { it.isFavorite }
                         },
                         onFavorite = { updatedDog ->
-                            updatedDog.isFavorite = !updatedDog.isFavorite
-                            dogs = dogs.toMutableList()
+                            dogs = dogs.map { dog ->
+                                if (dog.name == updatedDog.name) {
+                                    dog.copy(isFavorite = !dog.isFavorite) 
+                                } else dog
+                            }.toMutableList()
                             favoriteCount = dogs.count { it.isFavorite }
                         }
+
                     )
                 }
             }
