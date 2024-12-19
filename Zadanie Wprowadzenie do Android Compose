@@ -23,7 +23,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.verticalcoding.mydoglist.ui.theme.MyDogListTheme
 
-
 data class Dog(val name: String, var isFavorite: Boolean = false)
 
 class MainActivity : ComponentActivity() {
@@ -38,11 +37,10 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-
 @Composable
 fun DogListApp() {
     var dogName by remember { mutableStateOf("") }
-    var dogs by remember { mutableStateOf(mutableListOf<Dog>()) }
+    var dogs by remember { mutableStateOf(mutableSetOf<Dog>()) }
     var errorMessage by remember { mutableStateOf("") }
     var searchQuery by remember { mutableStateOf("") }
     var favoriteCount by remember { mutableStateOf(0) }
@@ -83,17 +81,17 @@ fun DogListApp() {
 
                 IconButton(
                     onClick = {
-                        if (dogName.isEmpty()) return@IconButton
-                        if (dogs.any { it.name == dogName }) {
-                            errorMessage = "Dog already exists!"
+                        if (dogs.any { it.name.equals(dogName, ignoreCase = true) }) {
+                            errorMessage = "Pies o tej nazwie już istnieje!"
                         } else {
-                            dogs = dogs.toMutableList().apply { add(Dog(name = dogName)) }
+                            dogs = dogs.toMutableSet().apply { add(Dog(name = dogName)) }
                             dogName = ""
+                            errorMessage = ""
                         }
                     },
                     enabled = dogName.isNotEmpty()
                 ) {
-                    Icon(Icons.Default.Add, contentDescription = "Add Dog")
+                    Icon(Icons.Default.Add, contentDescription = "Dodaj psa")
                 }
 
                 IconButton(
@@ -102,7 +100,7 @@ fun DogListApp() {
                     },
                     enabled = dogName.isNotEmpty()
                 ) {
-                    Icon(Icons.Default.Search, contentDescription = "Search Dog")
+                    Icon(Icons.Default.Search, contentDescription = "Szukaj psa")
                 }
             }
 
@@ -110,10 +108,10 @@ fun DogListApp() {
                 Text(
                     text = errorMessage,
                     color = Color.Red,
-                    modifier = Modifier.padding(8.dp)
+                    fontSize = 14.sp,
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
                 )
             }
-
 
             Row(
                 modifier = Modifier
@@ -156,7 +154,6 @@ fun DogListApp() {
                 }
             }
 
-
             LazyColumn(modifier = Modifier.padding(16.dp)) {
                 val filteredDogs = if (searchQuery.isEmpty()) {
                     dogs
@@ -168,25 +165,22 @@ fun DogListApp() {
                     DogItem(
                         dog = dog,
                         onDelete = {
-                            dogs = dogs.filter { it != dog }.toMutableList()
+                            dogs = dogs.filter { it != dog }.toMutableSet()
                             favoriteCount = dogs.count { it.isFavorite }
                         },
                         onFavorite = { updatedDog ->
-                            dogs = dogs.map { dog ->
-                                if (dog.name == updatedDog.name) {
-                                    dog.copy(isFavorite = !dog.isFavorite) 
-                                } else dog
-                            }.toMutableList()
+                            dogs = dogs.map {
+                                if (it.name == updatedDog.name) it.copy(isFavorite = !it.isFavorite)
+                                else it
+                            }.toMutableSet()
                             favoriteCount = dogs.count { it.isFavorite }
                         }
-
                     )
                 }
             }
         }
     }
 }
-
 
 @Composable
 fun DogItem(dog: Dog, onDelete: () -> Unit, onFavorite: (Dog) -> Unit) {
@@ -224,7 +218,6 @@ fun DogItem(dog: Dog, onDelete: () -> Unit, onFavorite: (Dog) -> Unit) {
             modifier = Modifier.weight(1f)
         )
 
-
         IconButton(onClick = {
             onFavorite(dog)
         }) {
@@ -251,8 +244,9 @@ fun DogItem(dog: Dog, onDelete: () -> Unit, onFavorite: (Dog) -> Unit) {
             }
         }
 
+
         IconButton(onClick = onDelete) {
-            Icon(Icons.Default.Delete, contentDescription = "Delete Dog", tint = Color.Black)
+            Icon(Icons.Default.Delete, contentDescription = "Usuń psa", tint = Color.Black)
         }
     }
 }
